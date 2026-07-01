@@ -1,0 +1,336 @@
+{
+  "artifact_catalog": {
+    "UrbanDriveProfile": {
+      "type": "UsageScenario",
+      "time_unit": "ms",
+      "period_ms": 20
+    },
+    "LaneKeepingPCM": {
+      "type": "ComponentArchitecture",
+      "functions": [
+        "camera_ingest",
+        "lane_detection",
+        "steering_command"
+      ]
+    },
+    "ECUAllocation": {
+      "type": "DeploymentModel",
+      "target_ecu": "ECU_A"
+    },
+    "TLMPlatform": {
+      "type": "TLMHardwareModel",
+      "bus": "AXI",
+      "clock_mhz": 400,
+      "time_unit": "ms"
+    },
+    "FunctionToBusMapping": {
+      "type": "FunctionToBusMapping",
+      "mapped_functions": [
+        "camera_ingest",
+        "lane_detection",
+        "steering_command"
+      ]
+    },
+    "ArmFirmware": {
+      "type": "FirmwareBinary",
+      "isa": "armv8-r",
+      "path": "artifacts/firmware/arm_lane_keeping_fw.json",
+      "deadline_ms": 20.0,
+      "symbols": [
+        "camera_ingest",
+        "lane_detection",
+        "steering_command"
+      ]
+    },
+    "SlowArmFirmware": {
+      "type": "FirmwareBinary",
+      "isa": "armv8-r",
+      "path": "artifacts/firmware/slow_arm_lane_keeping_fw.json",
+      "deadline_ms": 20.0,
+      "symbols": [
+        "camera_ingest",
+        "lane_detection",
+        "steering_command"
+      ]
+    },
+    "RiscvFirmware": {
+      "type": "FirmwareBinary",
+      "isa": "riscv32",
+      "path": "artifacts/firmware/riscv_lane_keeping_fw.json",
+      "deadline_ms": 20.0,
+      "symbols": [
+        "camera_ingest",
+        "lane_detection",
+        "steering_command"
+      ]
+    },
+    "RenodeCortexR52Platform": {
+      "type": "PlatformDescription",
+      "isa": "armv8-r",
+      "path": "artifacts/platforms/renode_cortex_r52_platform.json",
+      "peripherals": [
+        "camera",
+        "timer",
+        "can"
+      ],
+      "time_unit": "ms"
+    },
+    "CameraSensorTrace": {
+      "type": "SensorTrace",
+      "sensor": "camera",
+      "path": "artifacts/traces/camera_sensor_trace.csv",
+      "time_unit": "ms"
+    },
+    "FirmwareSymbolMap": {
+      "type": "FirmwareSymbolMap",
+      "symbols": [
+        "camera_ingest",
+        "lane_detection",
+        "steering_command"
+      ]
+    },
+    "TimerConfig": {
+      "type": "TimerConfig",
+      "tick_unit": "ms"
+    }
+  },
+  "simulators": {
+    "ArchitectureSimulator": {
+      "description": "PCM/Palladio-style functional and timing estimation",
+      "requires": [
+        "UsageScenario",
+        "ComponentArchitecture",
+        "DeploymentModel"
+      ],
+      "produces_states": [
+        "FunctionalState"
+      ],
+      "produces_results": [
+        "ArchitectureTimingEstimate"
+      ],
+      "constraints": [
+        {
+          "kind": "property_equals",
+          "artifact_type": "DeploymentModel",
+          "property": "target_ecu",
+          "value": "ECU_A"
+        },
+        {
+          "kind": "contains_all",
+          "artifact_type": "ComponentArchitecture",
+          "property": "functions",
+          "values": [
+            "camera_ingest",
+            "lane_detection",
+            "steering_command"
+          ]
+        }
+      ]
+    },
+    "TLMSimulator": {
+      "description": "SystemC/TLM-style communication and timing simulation",
+      "requires": [
+        "ComponentArchitecture",
+        "TLMHardwareModel",
+        "FunctionToBusMapping"
+      ],
+      "produces_states": [
+        "TLMState"
+      ],
+      "produces_results": [
+        "TransactionTrace"
+      ],
+      "constraints": [
+        {
+          "kind": "same_property",
+          "left_type": "TLMHardwareModel",
+          "left_property": "time_unit",
+          "right_type": "UsageScenario",
+          "right_property": "time_unit"
+        },
+        {
+          "kind": "covers_functions",
+          "architecture_type": "ComponentArchitecture",
+          "mapping_type": "FunctionToBusMapping"
+        }
+      ]
+    },
+    "FirmwareEmulator": {
+      "description": "Renode-like firmware and platform emulation",
+      "requires": [
+        "FirmwareBinary",
+        "PlatformDescription",
+        "SensorTrace"
+      ],
+      "tool_adapter": {
+        "kind": "local_firmware_emulator",
+        "script": "tools/firmware_emulator.py",
+        "output": "tool_runs/{scenario}/firmware_trace.json"
+      },
+      "produces_states": [
+        "FirmwareState"
+      ],
+      "produces_results": [
+        "FirmwareTrace"
+      ],
+      "execution_checks": [
+        {
+          "kind": "trace_kind",
+          "value": "FirmwareTrace"
+        },
+        {
+          "kind": "samples_match_sensor_trace"
+        },
+        {
+          "kind": "events_cover_firmware_symbols"
+        },
+        {
+          "kind": "max_reaction_time_at_most_deadline"
+        }
+      ],
+      "constraints": [
+        {
+          "kind": "same_property",
+          "left_type": "FirmwareBinary",
+          "left_property": "isa",
+          "right_type": "PlatformDescription",
+          "right_property": "isa"
+        },
+        {
+          "kind": "contains_all",
+          "artifact_type": "PlatformDescription",
+          "property": "peripherals",
+          "values": [
+            "camera",
+            "timer",
+            "can"
+          ]
+        },
+        {
+          "kind": "same_property",
+          "left_type": "SensorTrace",
+          "left_property": "time_unit",
+          "right_type": "PlatformDescription",
+          "right_property": "time_unit"
+        }
+      ]
+    }
+  },
+  "state_mappings": [
+    {
+      "from_simulator": "ArchitectureSimulator",
+      "to_simulator": "TLMSimulator",
+      "from_state": "FunctionalState",
+      "to_state": "TLMState",
+      "requires": [
+        "FunctionToBusMapping"
+      ]
+    },
+    {
+      "from_simulator": "TLMSimulator",
+      "to_simulator": "FirmwareEmulator",
+      "from_state": "TLMState",
+      "to_state": "FirmwareState",
+      "requires": [
+        "FirmwareSymbolMap",
+        "TimerConfig"
+      ]
+    }
+  ],
+  "scenarios": {
+    "complete_chain": {
+      "description": "Valid chain from architecture simulation to TLM to firmware emulation.",
+      "sequence": [
+        "ArchitectureSimulator",
+        "TLMSimulator",
+        "FirmwareEmulator"
+      ],
+      "artifacts": [
+        "UrbanDriveProfile",
+        "LaneKeepingPCM",
+        "ECUAllocation",
+        "TLMPlatform",
+        "FunctionToBusMapping",
+        "ArmFirmware",
+        "RenodeCortexR52Platform",
+        "CameraSensorTrace",
+        "FirmwareSymbolMap",
+        "TimerConfig"
+      ],
+      "expect": "pass"
+    },
+    "missing_symbol_map": {
+      "description": "The simulators can run, but the switch into firmware emulation is not justified.",
+      "sequence": [
+        "ArchitectureSimulator",
+        "TLMSimulator",
+        "FirmwareEmulator"
+      ],
+      "artifacts": [
+        "UrbanDriveProfile",
+        "LaneKeepingPCM",
+        "ECUAllocation",
+        "TLMPlatform",
+        "FunctionToBusMapping",
+        "ArmFirmware",
+        "RenodeCortexR52Platform",
+        "CameraSensorTrace",
+        "TimerConfig"
+      ],
+      "expect": "fail"
+    },
+    "wrong_firmware_isa": {
+      "description": "The firmware binary and emulated platform are structurally present but incompatible.",
+      "sequence": [
+        "ArchitectureSimulator",
+        "TLMSimulator",
+        "FirmwareEmulator"
+      ],
+      "artifacts": [
+        "UrbanDriveProfile",
+        "LaneKeepingPCM",
+        "ECUAllocation",
+        "TLMPlatform",
+        "FunctionToBusMapping",
+        "RiscvFirmware",
+        "RenodeCortexR52Platform",
+        "CameraSensorTrace",
+        "FirmwareSymbolMap",
+        "TimerConfig"
+      ],
+      "expect": "fail"
+    },
+    "missing_sensor_trace": {
+      "description": "Firmware emulation lacks the concrete sensor input trace.",
+      "sequence": [
+        "FirmwareEmulator"
+      ],
+      "artifacts": [
+        "ArmFirmware",
+        "RenodeCortexR52Platform"
+      ],
+      "expect": "fail"
+    },
+    "firmware_deadline_violation": {
+      "description": "All required artifacts are present, but the executable firmware trace violates the control deadline.",
+      "sequence": [
+        "ArchitectureSimulator",
+        "TLMSimulator",
+        "FirmwareEmulator"
+      ],
+      "artifacts": [
+        "UrbanDriveProfile",
+        "LaneKeepingPCM",
+        "ECUAllocation",
+        "TLMPlatform",
+        "FunctionToBusMapping",
+        "SlowArmFirmware",
+        "RenodeCortexR52Platform",
+        "CameraSensorTrace",
+        "FirmwareSymbolMap",
+        "TimerConfig"
+      ],
+      "expect": "fail"
+    }
+  }
+}

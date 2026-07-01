@@ -1,0 +1,12 @@
+{
+  "name": "renode_cortex_r52_platform",
+  "kind": "PlatformDescription",
+  "isa": "armv8-r",
+  "time_unit": "ms",
+  "tick_unit": "ms",
+  "peripherals": [
+    "camera",
+    "timer",
+    "can"
+  ]
+}

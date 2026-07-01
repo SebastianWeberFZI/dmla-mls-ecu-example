@@ -1,0 +1,16 @@
+{
+  "name": "arm_lane_keeping_fw",
+  "kind": "FirmwareImage",
+  "isa": "armv8-r",
+  "deadline_ms": 20.0,
+  "symbols": [
+    "camera_ingest",
+    "lane_detection",
+    "steering_command"
+  ],
+  "execution_ms": {
+    "camera_ingest": 1.2,
+    "lane_detection": 5.5,
+    "steering_command": 1.1
+  }
+}

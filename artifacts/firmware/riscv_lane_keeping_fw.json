@@ -1,0 +1,16 @@
+{
+  "name": "riscv_lane_keeping_fw",
+  "kind": "FirmwareImage",
+  "isa": "riscv32",
+  "deadline_ms": 20.0,
+  "symbols": [
+    "camera_ingest",
+    "lane_detection",
+    "steering_command"
+  ],
+  "execution_ms": {
+    "camera_ingest": 1.0,
+    "lane_detection": 4.5,
+    "steering_command": 1.0
+  }
+}
