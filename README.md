@@ -1,11 +1,14 @@
 # DMLA / MLS ECU Example
 
-Reference implementation for the ECU software architecture example (Section IV)
+Reference implementation for the ECU software architecture example (Section 4)
 of the position paper:
 
-> Sebastian Weber, Thomas Weber, Jörg Henß, Robert Heinrich.
-> **"Going beyond structure — Can Dynamic Multi-Level Algebra Support
-> Multi-Level Simulation?"**
+> Sebastian Weber, Thomas Weber, Arne Lange, Jörg Henß, Robert Heinrich.
+> **"Going beyond structure — Can Dynamic Multi-Layer Algebra Support
+> Multi-Level Simulation?"** In: *ACM/IEEE 29th International Conference on
+> Model Driven Engineering Languages and Systems (MODELS Companion 2026)*,
+> MULTI 2026 workshop, Málaga, Spain. ACM, 2026.
+> DOI: [10.1145/3837062.3838698](https://doi.org/10.1145/3837062.3838698)
 
 This prototype implements the paper's example as a small DMLA-inspired
 compatibility model for multi-level simulation (MLS) of an automotive ECU.
@@ -85,7 +88,7 @@ All five scenarios have been verified to produce their expected result.
 
 ## Correspondence to the paper
 
-| Paper (Fig. 1 / Sec. IV) | This repository |
+| Paper (Fig. 1 / Sec. 4) | This repository |
 |---|---|
 | Architecture Simulator, TLM Simulator, Firmware Emulator | `simulators` in `ecu_mls_model.json` |
 | Input artefacts (Usage scenario, Component architecture, Deployment model, …) | `artifact_catalog` in `ecu_mls_model.json` |
